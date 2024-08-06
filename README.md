@@ -1,1 +1,2 @@
-# marker-mapper
+# Marker Mapper - Re-Implementation
+This is an attempt at a simplified re-implementation of the existing [marker mapper](https://github.com/pupil-labs/surface-tracker) code. It is not currently anywhere in production.
