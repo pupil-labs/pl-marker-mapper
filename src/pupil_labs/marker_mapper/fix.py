@@ -12,6 +12,10 @@ def undistort_image(image, camera: CameraRadial):
     )
 
 
+def undistort_points(points, camera: CameraRadial):
+    return camera.undistort_points(points, pixel_values=True)[:2]
+
+
 def perspectiveTransform(points, transform):
     points = points.reshape(-1, 1, 2).astype(np.float32)
     points_trans = cv2.perspectiveTransform(points, transform)

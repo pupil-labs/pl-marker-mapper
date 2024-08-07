@@ -1,12 +1,14 @@
 from typing import List, Tuple, Optional
 import pupil_apriltags
-
+import logging
 import cv2
 import numpy as np
 from pupil_labs.marker_mapper import fix
 from pupil_labs.camera import CameraRadial
 from dataclasses import dataclass
 from collections import OrderedDict
+
+logger = logging.getLogger(__name__)
 
 
 def normalized_corners():
@@ -16,7 +18,8 @@ def normalized_corners():
             [1, 0],
             [1, 1],
             [0, 1],
-        ]
+        ],
+        dtype=np.float32,
     )
 
 
@@ -124,6 +127,25 @@ class Surface:
         for marker_id, vertices in self.markers.items():
             self.markers[marker_id] = fix.perspectiveTransform(vertices, trans)
 
+    def move_corner(
+        self,
+        corner_idx: int,
+        new_pos: Tuple[float, float],
+        img2surface: np.ndarray,
+        camera: CameraRadial,
+    ):
+        new_pos_undist = fix.undistort_points(np.array(new_pos), camera)
+        new_pos_surf = fix.perspectiveTransform(new_pos_undist, img2surface)
+        new_pos_surf = new_pos_surf.flatten()
+
+        corners_original = normalized_corners()
+        corners_new = corners_original.copy()
+        corners_new[corner_idx] = new_pos_surf
+
+        trans = fix.getPerspectiveTransform(corners_new, corners_original)
+        for marker_id, vertices in self.markers.items():
+            self.markers[marker_id] = fix.perspectiveTransform(vertices, trans)
+
     @staticmethod
     def _get_undist_vertices(
         markers: List[pupil_apriltags.Detection], camera: CameraRadial
@@ -145,7 +167,6 @@ class Surface:
         # cv2.findHomography(B, A)! The errors can actually be quite large, resulting in
         # on-screen discrepancies of up to 50 pixels. We try to find the inverse
         # analytically instead with fallbacks.
-
         try:
             A_to_B = np.linalg.inv(B_to_A)
             return A_to_B, B_to_A
