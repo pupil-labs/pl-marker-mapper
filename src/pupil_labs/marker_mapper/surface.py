@@ -60,9 +60,9 @@ class Surface:
         vertices_undist = Surface._get_undist_vertices(detections, camera)
         quadrilateral = _get_convex_quadrilateral(vertices_undist)
 
-        img2surface = cv2.getPerspectiveTransform(
-            quadrilateral.astype(np.float32),
-            normalized_corners().astype(np.float32),
+        img2surface = fix.getPerspectiveTransform(
+            quadrilateral,
+            normalized_corners(),
         )
         vertices_surf = fix.perspectiveTransform(vertices_undist, img2surface)
         vertices_surf = vertices_surf.reshape(-1, 4, 2)
@@ -115,6 +115,14 @@ class Surface:
         if marker_id not in self.markers:
             raise ValueError(f"Marker {marker_id} not found in surface {self.name}")
         self.markers.pop(marker_id)
+
+    def rotate(self):
+        corners_original = normalized_corners()
+        corners_rotated = np.roll(corners_original, -1, axis=0)
+
+        trans = fix.getPerspectiveTransform(corners_rotated, corners_original)
+        for marker_id, vertices in self.markers.items():
+            self.markers[marker_id] = fix.perspectiveTransform(vertices, trans)
 
     @staticmethod
     def _get_undist_vertices(

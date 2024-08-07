@@ -66,7 +66,10 @@ def main():
             cv2.imshow("Cropped Image", crop)
         cv2.imshow("Undistorted Image", undist_img)
         cv2.imshow("Distorted Image", orig_img)
-        cv2.waitKey(0)
+
+        key = cv2.waitKey(0)
+        if key == ord("r"):
+            surface.rotate()
 
 
 def get_cam(rec: nr.neon_recording.NeonRecording):
