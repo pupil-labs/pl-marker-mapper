@@ -8,13 +8,6 @@ from pupil_labs.camera import CameraRadial
 from pupil_labs.marker_mapper import Surface, fix, utils
 
 
-def get_cam(rec: nr.neon_recording.NeonRecording):
-    intrinsics = rec.scene_camera_calibration
-    camera_matrix = intrinsics.camera_matrix[0]
-    dist_coeffs = intrinsics.distortion_coefficients[0]
-    return CameraRadial(1600, 1200, camera_matrix, dist_coeffs)
-
-
 def main():
     recording_dir = pathlib.Path("/home/marc/Downloads/recording")
     recording = nr.load(recording_dir)
@@ -37,27 +30,32 @@ def main():
     markers = marker_detector.detect(frame.gray)
     surface = Surface.from_apriltag_detections("test surface", markers, camera)
 
+    surface.remove_marker(24)
+    img2surface, surface2image = surface.localize(markers, camera)
+    surface.add_marker(markers[0], camera, img2surface)
+
     for frame in frames:
         markers = marker_detector.detect(frame.gray)
         localization = surface.localize(markers, camera)
 
         orig_img = frame.bgr
-        undist_image = fix.undistort_image(frame.bgr, camera)
+        undist_img = fix.undistort_image(frame.bgr, camera)
 
         if localization is not None:
             img2surface, surface2image = localization
 
-            vertices_dist = np.array([m.corners for m in markers]).reshape(-1, 2)
-            for p in vertices_dist.astype(int):
-                cv2.circle(orig_img, tuple(p), 3, (0, 255, 0), -1)
+            vertices_dist = np.array([m.corners for m in markers])
+            vertices_undist = Surface._get_undist_vertices(markers, camera).reshape(
+                -1, 4, 2
+            )
 
-            vertices_undist = Surface._get_undist_vertices(markers, camera)
-            for p in vertices_undist.astype(int):
-                cv2.circle(undist_image, tuple(p), 3, (0, 255, 0), -1)
+            marker_ids = [m.tag_id for m in markers]
+            orig_img = draw_markers(orig_img, marker_ids, vertices_dist, surface)
+            undist_img = draw_markers(undist_img, marker_ids, vertices_undist, surface)
 
             surface_boundary_undist = utils.get_surface_boundary(surface2image)
             cv2.polylines(
-                undist_image,
+                undist_img,
                 [surface_boundary_undist.astype(int)],
                 True,
                 (0, 0, 255),
@@ -71,12 +69,33 @@ def main():
                 orig_img, [surface_boundary_dist.astype(int)], True, (0, 0, 255), 2
             )
 
-            crop = utils.crop_image(undist_image, surface2image, width=500, height=None)
+            crop = utils.crop_image(undist_img, surface2image, width=500, height=None)
 
             cv2.imshow("Cropped Image", crop)
-        cv2.imshow("Undistorted Image", undist_image)
+        cv2.imshow("Undistorted Image", undist_img)
         cv2.imshow("Distorted Image", orig_img)
         cv2.waitKey(0)
+
+
+def get_cam(rec: nr.neon_recording.NeonRecording):
+    intrinsics = rec.scene_camera_calibration
+    camera_matrix = intrinsics.camera_matrix[0]
+    dist_coeffs = intrinsics.distortion_coefficients[0]
+    return CameraRadial(1600, 1200, camera_matrix, dist_coeffs)
+
+
+def draw_markers(img, marker_ids, marker_verts, surface):
+    included_color = (0, 255, 0)
+    excluded_color = (0, 0, 255)
+
+    overlay = img.copy()
+    for m_id, vert in zip(marker_ids, marker_verts):
+        color = included_color if m_id in surface.markers.keys() else excluded_color
+        cv2.fillPoly(overlay, [vert.astype(int)], color)
+
+    alpha = 0.3
+    img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+    return img
 
 
 if __name__ == "__main__":

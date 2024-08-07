@@ -96,6 +96,26 @@ class Surface:
         )
         return img2surface, surface2image
 
+    def add_marker(
+        self,
+        marker: pupil_apriltags.Detection,
+        camera: CameraRadial,
+        img2surface: np.ndarray,
+    ):
+        if marker.tag_id in self.markers:
+            raise ValueError(
+                f"Marker {marker.tag_id} already exists in surface {self.name}"
+            )
+
+        vertices_undist = self._get_undist_vertices([marker], camera)
+        vertices_surf = fix.perspectiveTransform(vertices_undist, img2surface)
+        self.markers[marker.tag_id] = vertices_surf
+
+    def remove_marker(self, marker_id: int):
+        if marker_id not in self.markers:
+            raise ValueError(f"Marker {marker_id} not found in surface {self.name}")
+        self.markers.pop(marker_id)
+
     @staticmethod
     def _get_undist_vertices(
         markers: List[pupil_apriltags.Detection], camera: CameraRadial
