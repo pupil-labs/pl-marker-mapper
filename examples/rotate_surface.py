@@ -1,9 +1,8 @@
 import pathlib
 
 import cv2
-from pupil_labs.marker_mapper import Surface
-
 import helpers
+from pupil_labs.marker_mapper import Surface
 
 
 def main():

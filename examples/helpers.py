@@ -1,10 +1,10 @@
 import cv2
+import helpers
+import numpy as np
+import pupil_apriltags
 import pupil_labs.neon_recording as nr
 from pupil_labs.camera import CameraRadial
-import numpy as np
 from pupil_labs.marker_mapper import Surface, fix, utils
-import helpers
-import pupil_apriltags
 
 
 def setup(recording_dir):
