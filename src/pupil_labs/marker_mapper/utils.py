@@ -19,7 +19,6 @@ def crop_image(undist_image, surface2image, width=None, height=None):
         crop_corners.astype(np.float32),
     )
     crop = cv2.warpPerspective(undist_image, crop_transform, crop_size)
-    crop = cv2.flip(crop, 0)
     return crop
 
 

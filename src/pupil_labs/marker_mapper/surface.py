@@ -209,7 +209,7 @@ def _get_convex_quadrilateral(vertices: np.ndarray):
     # See: https://github.com/pupil-labs/pupil/issues/1544
     vertices = np.asarray(vertices, dtype=np.float32)
 
-    hull_points = cv2.convexHull(vertices, clockwise=False)
+    hull_points = cv2.convexHull(vertices, clockwise=True)
 
     # The convex hull of a list of markers must have at least 4 corners, since a
     # single marker already has 4 corners. If the convex hull has more than 4
@@ -229,11 +229,10 @@ def _get_convex_quadrilateral(vertices: np.ndarray):
     hull_points = hull_points[[1, 0, 3, 2], :, :]
 
     # Roll the hull_points vertices until we have the right orientation:
-    # vertices space has its origin at the image center. Adding 1 to the
-    # coordinates puts the origin at the top left.
     distance_to_top_left = np.sqrt(
         (hull_points[:, :, 0] + 1) ** 2 + (hull_points[:, :, 1] + 1) ** 2
     )
-    bot_left_idx = np.argmin(distance_to_top_left) + 1
+    bot_left_idx = np.argmin(distance_to_top_left)
     hull_points = np.roll(hull_points, -bot_left_idx, axis=0)
+
     return hull_points

@@ -54,20 +54,12 @@ def main():
             undist_img = draw_markers(undist_img, marker_ids, vertices_undist, surface)
 
             surface_boundary_undist = utils.get_surface_boundary(surface2image)
-            cv2.polylines(
-                undist_img,
-                [surface_boundary_undist.astype(int)],
-                True,
-                (0, 0, 255),
-                2,
-            )
+            draw_surface(undist_img, surface_boundary_undist)
 
             surface_boundary_dist = utils.get_surface_boundary(
                 surface2image, distorted=True, camera=camera
             )
-            cv2.polylines(
-                orig_img, [surface_boundary_dist.astype(int)], True, (0, 0, 255), 2
-            )
+            draw_surface(orig_img, surface_boundary_dist)
 
             crop = utils.crop_image(undist_img, surface2image, width=500, height=None)
 
@@ -96,6 +88,34 @@ def draw_markers(img, marker_ids, marker_verts, surface):
     alpha = 0.3
     img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
     return img
+
+
+def draw_surface(img, boundary_points):
+    cv2.polylines(
+        img,
+        [boundary_points.astype(int)],
+        True,
+        (255, 0, 0),
+        2,
+    )
+    cv2.polylines(
+        img,
+        [boundary_points[:10].astype(int)],
+        False,
+        (0, 0, 255),
+        2,
+    )
+    top_center = boundary_points[:10].mean(axis=0).astype(int)
+    cv2.putText(
+        img,
+        "Top",
+        tuple(top_center),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (0, 0, 0),
+        2,
+        cv2.LINE_AA,
+    )
 
 
 if __name__ == "__main__":
