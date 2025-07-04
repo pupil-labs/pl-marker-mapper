@@ -9,15 +9,11 @@
 [![python version](https://img.shields.io/pypi/pyversions/pupil-labs-marker-mapper)](https://pypi.org/project/pupil-labs-marker-mapper/)
 
 
-Marker Mapper
+This is an implementation of the Marker Mapper functionality as it can be found in e.g. [Pupil Cloud](https://cloud.pupil-labs.com/) and [Neon Player](https://docs.pupil-labs.com/neon/neon-player/). This implementation allows both post hoc and real-time gaze mapping onto surfaces defined by AprilTags.
+
+The examples demonstrate how to interact with the Marker Mapper's interface. There is also an example app that demonstrates the Marker Mapper functionality in real-time in combination with a Neon device.
 
 ## Installation
-
-```
-pip install pupil-labs-marker-mapper
-```
-
-or
 
 ```bash
 pip install -e git+https://github.com/pupil-labs/pl-marker-mapper.git
