@@ -1,7 +1,13 @@
 import cv2
-import helpers
 import numpy as np
+
+# Workaround for https://github.com/opencv/opencv/issues/21952
+cv2.imshow("cv/av bug", np.zeros(1))
+cv2.destroyAllWindows()
+
+import helpers
 import pupil_apriltags
+
 import pupil_labs.neon_recording as nr
 from pupil_labs.camera import CameraRadial
 from pupil_labs.marker_mapper import Surface, fix, utils
@@ -36,6 +42,8 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
     img_undist_original = fix.undistort_image(frame.bgr, camera)
     img_undist = img_undist_original.copy()
 
+    gaze_dist = None
+    gaze_undist = None
     if gaze is not None:
         gaze_dist = np.array([gaze.x, gaze.y])
         gaze_undist = fix.undistort_points(gaze_dist, camera)
@@ -68,9 +76,10 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
         img_cropped = utils.crop_image(
             img_undist_original, surface2image, width=500, height=None
         )
-        gaze_surf = fix.perspectiveTransform(gaze_undist, img2surface)[0]
-        gaze_cropped = gaze_surf * img_cropped.shape[:2][::-1]
-        cv2.circle(img_cropped, tuple(gaze_cropped.astype(int)), 20, (0, 0, 255), 3)
+        if gaze_undist is not None:
+            gaze_surf = fix.perspectiveTransform(gaze_undist, img2surface)[0]
+            gaze_cropped = gaze_surf * img_cropped.shape[:2][::-1]
+            cv2.circle(img_cropped, tuple(gaze_cropped.astype(int)), 20, (0, 0, 255), 3)
 
         cv2.imshow("Cropped Image", img_cropped)
     cv2.imshow("Undistorted Image", img_undist)
@@ -78,9 +87,9 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
 
 
 def get_cam(rec: nr.neon_recording.NeonRecording) -> CameraRadial:
-    intrinsics = rec.scene_camera_calibration
-    camera_matrix = intrinsics.camera_matrix[0]
-    dist_coeffs = intrinsics.distortion_coefficients[0]
+    camera_matrix = rec.calibration.scene_camera_matrix
+    dist_coeffs = rec.calibration.scene_distortion_coefficients
+
     return CameraRadial(1600, 1200, camera_matrix, dist_coeffs)
 
 
@@ -89,7 +98,7 @@ def draw_markers(img, marker_ids, marker_verts, surface):
     excluded_color = (0, 0, 255)
 
     overlay = img.copy()
-    for m_id, vert in zip(marker_ids, marker_verts):
+    for m_id, vert in zip(marker_ids, marker_verts, strict=False):
         color = included_color if m_id in surface.markers.keys() else excluded_color
         cv2.fillPoly(overlay, [vert.astype(int)], color)
 

@@ -1,8 +1,7 @@
-from typing import Tuple, Optional
-
 import cv2
 import numpy as np
-from pupil_labs.marker_mapper import surface, fix
+
+from pupil_labs.marker_mapper import fix, surface
 
 
 def crop_image(undist_image, surface2image, width=None, height=None):
@@ -27,9 +26,9 @@ def _calculate_crop_size(
     tr: int,
     br: int,
     bl: int,
-    width: Optional[int],
-    height: Optional[int],
-) -> Tuple[int, int]:
+    width: int | None,
+    height: int | None,
+) -> tuple[int, int]:
     # TODO: this is appriximately correct but not perfect. How does this work?
 
     # compute the width of the new image, which will be the
@@ -53,7 +52,7 @@ def _calculate_crop_size(
     # order
 
     if width is not None and height is not None:
-        raise ValueError(f'Expected only "width" OR "height" to be supplied')
+        raise ValueError('Expected only "width" OR "height" to be supplied')
 
     if width is not None:
         ratio = max_width / width
@@ -68,8 +67,8 @@ def _calculate_crop_size(
     return int(max_width), int(max_height)
 
 
-def get_surface_boundary(surface2image, distorted=False, camera=None):
-    surface_boundary_norm = surface.normalized_boundary_points()
+def get_surface_boundary(surface2image, distorted=False, camera=None, n=10):
+    surface_boundary_norm = surface.normalized_boundary_points(n)
     surface_boundary_undist = fix.perspectiveTransform(
         surface_boundary_norm, surface2image
     )

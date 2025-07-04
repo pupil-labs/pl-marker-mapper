@@ -1,12 +1,18 @@
-import pathlib
-
 import cv2
+import numpy as np
+
+# Workaround for https://github.com/opencv/opencv/issues/21952
+cv2.imshow("cv/av bug", np.zeros(1))
+cv2.destroyAllWindows()
+
+import sys
+
 import helpers
+
 from pupil_labs.marker_mapper import Surface
 
 
-def main():
-    recording_dir = pathlib.Path("/home/marc/Downloads/recording")
+def main(recording_dir):
     camera, marker_detector, frames = helpers.setup(recording_dir)
 
     # Define an example surface based on markers detected in the first frame
@@ -25,4 +31,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

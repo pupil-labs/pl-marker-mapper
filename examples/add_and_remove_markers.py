@@ -1,12 +1,12 @@
-import pathlib
+import sys
 
 import cv2
 import helpers
+
 from pupil_labs.marker_mapper import Surface
 
 
-def main():
-    recording_dir = pathlib.Path("/home/marc/Downloads/recording")
+def main(recording_dir):
     camera, marker_detector, frames = helpers.setup(recording_dir)
 
     # Define an example surface based on markers detected in the first frame
@@ -14,8 +14,10 @@ def main():
     markers = marker_detector.detect(frame.gray)
     surface = Surface.from_apriltag_detections("test surface", markers, camera)
 
-    surface.remove_marker(24)
+    surface.remove_marker(markers[0].tag_id)  # Remove the first marker
     img2surface, surface2image = surface.localize(markers, camera)
+
+    # Add the first marker back to the surface
     surface.add_marker(markers[0], camera, img2surface)
 
     for frame in frames:
@@ -26,4 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

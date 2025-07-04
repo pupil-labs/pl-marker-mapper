@@ -1,12 +1,18 @@
-import pathlib
-
 import cv2
+import numpy as np
+
+# Workaround for https://github.com/opencv/opencv/issues/21952
+cv2.imshow("cv/av bug", np.zeros(1))
+cv2.destroyAllWindows()
+
+import sys
+
 import helpers
+
 from pupil_labs.marker_mapper import Surface
 
 
-def main():
-    recording_dir = pathlib.Path("/home/marc/Downloads/recording")
+def main(recording_dir):
     camera, marker_detector, frames, gaze = helpers.setup(
         recording_dir, include_gaze=True
     )
@@ -20,7 +26,7 @@ def main():
     img2surface, surface2image = surface.localize(markers, camera)
     surface.add_marker(markers[0], camera, img2surface)
 
-    for frame, g in zip(frames, gaze):
+    for frame, g in zip(frames, gaze, strict=False):
         markers = marker_detector.detect(frame.gray)
         localization = surface.localize(markers, camera)
         helpers.visualize_results(camera, frame, markers, surface, localization, g)
@@ -28,4 +34,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

@@ -1,12 +1,13 @@
-from typing import List, Tuple, Optional
-import pupil_apriltags
 import logging
+from collections import OrderedDict
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
-from pupil_labs.marker_mapper import fix
+import pupil_apriltags
+
 from pupil_labs.camera import CameraRadial
-from dataclasses import dataclass
-from collections import OrderedDict
+from pupil_labs.marker_mapper import fix
 
 logger = logging.getLogger(__name__)
 
@@ -23,24 +24,22 @@ def normalized_corners():
     )
 
 
-def normalized_boundary_points():
+def normalized_boundary_points(n=10):
     # returns the coordinates of the boundary points of a 1x1 square
-    x = np.linspace(0, 1, 10)
-    y = np.linspace(0, 1, 10)
+    x = np.linspace(0, 1, n)
+    y = np.linspace(0, 1, n)
 
     x0 = np.zeros_like(y)
     x1 = np.ones_like(y)
     y0 = np.zeros_like(x)
     y1 = np.ones_like(x)
 
-    return np.concat(
-        [
-            np.vstack([x, y0]).T[:-1],
-            np.vstack([x1, y]).T[:-1],
-            np.vstack([x, y1]).T[::-1][:-1],
-            np.vstack([x0, y]).T[::-1][:-1],
-        ]
-    )
+    return np.concat([
+        np.vstack([x, y0]).T[:-1],
+        np.vstack([x1, y]).T[:-1],
+        np.vstack([x, y1]).T[::-1][:-1],
+        np.vstack([x0, y]).T[::-1][:-1],
+    ])
 
 
 @dataclass
@@ -51,11 +50,10 @@ class Surface:
     @staticmethod
     def from_apriltag_detections(
         name: str,
-        detections: List[pupil_apriltags.Detection],
+        detections: list[pupil_apriltags.Detection],
         camera: CameraRadial,
     ) -> "Surface":
-        """
-        Create a `Surface` from a list of `pupil_apriltags.Detection`.
+        """Create a `Surface` from a list of `pupil_apriltags.Detection`.
         The surface corners will be set to the "convex quadrilateral" formed by the detected markers.
         """
         # TODO: How do we handle marker duplicates?
@@ -70,13 +68,13 @@ class Surface:
         vertices_surf = fix.perspectiveTransform(vertices_undist, img2surface)
         vertices_surf = vertices_surf.reshape(-1, 4, 2)
         marker_ids = [marker.tag_id for marker in detections]
-        markers = OrderedDict(zip(marker_ids, vertices_surf))
+        markers = OrderedDict(zip(marker_ids, vertices_surf, strict=False))
 
         return Surface(name, markers)
 
     def localize(
         self,
-        visible_markers: List[pupil_apriltags.Detection],
+        visible_markers: list[pupil_apriltags.Detection],
         camera: CameraRadial,
     ):
         # TODO: How to handle duplicate markers?
@@ -130,7 +128,7 @@ class Surface:
     def move_corner(
         self,
         corner_idx: int,
-        new_pos: Tuple[float, float],
+        new_pos: tuple[float, float],
         img2surface: np.ndarray,
         camera: CameraRadial,
     ):
@@ -148,7 +146,7 @@ class Surface:
 
     @staticmethod
     def _get_undist_vertices(
-        markers: List[pupil_apriltags.Detection], camera: CameraRadial
+        markers: list[pupil_apriltags.Detection], camera: CameraRadial
     ):
         vertices_dist = np.array([marker.corners for marker in markers])
         vertices_dist = vertices_dist.reshape(-1, 2)
@@ -191,12 +189,10 @@ class Surface:
 
 # From pupil_src/shared_modules/methods.py
 def _GetAnglesPolyline(polyline, closed=False):
-    """
-    see: http://stackoverflow.com/questions/3486172/angle-between-3-points
+    """see: http://stackoverflow.com/questions/3486172/angle-between-3-points
     ported to numpy
     returns n-2 signed angles
     """
-
     points = polyline[:, 0]
 
     if closed:
