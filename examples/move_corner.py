@@ -34,7 +34,7 @@ def move_corner(camera, markers, surface):
     current_corner_pos_undist = fix.perspectiveTransform(
         np.array([1, 0]), surface2image
     )
-    current_corner_pos_dist = camera.distort_points_on_image_plane(
+    current_corner_pos_dist = camera.distort_points(
         current_corner_pos_undist
     )
     new_corner_pos = current_corner_pos_dist + 200

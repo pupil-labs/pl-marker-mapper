@@ -1,9 +1,9 @@
 import cv2
-from pupil_labs.camera import CameraRadial
+from pupil_labs.camera import Camera
 import numpy as np
 
 
-def undistort_image(image, camera: CameraRadial):
+def undistort_image(image, camera: Camera):
     return cv2.undistort(
         image,
         camera.camera_matrix,
@@ -12,8 +12,8 @@ def undistort_image(image, camera: CameraRadial):
     )
 
 
-def undistort_points(points, camera: CameraRadial):
-    return camera.undistort_points(points, pixel_values=True)[:2]
+def undistort_points(points, camera: Camera):
+    return camera.undistort_points(points)[:2]
 
 
 def perspectiveTransform(points, transform):

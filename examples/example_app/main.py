@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from screen_image_widget import SceneImageWidget
 from surface_image_widget import SurfaceImageWidget
 
-from pupil_labs.camera import CameraRadial
+from pupil_labs.camera import Camera
 from pupil_labs.marker_mapper import Surface, fix, utils
 from pupil_labs.realtime_api.simple import Device
 
@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         if not self.neon_device:
             raise RuntimeError("No Neon device found. Please connect a device.")
         calibration = self.neon_device.get_calibration()
-        self.calibration = CameraRadial(
+        self.calibration = Camera(
             1600,
             1200,
             calibration.scene_camera_matrix,
@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         scene_img, gaze_scene = (
             self.neon_device.receive_matched_scene_video_frame_and_gaze()
         )
+        gaze_scene = gaze_scene[0:2]
         scene_img = scene_img.bgr_pixels
 
         scene_gray = cv2.cvtColor(scene_img, cv2.COLOR_BGR2GRAY)
@@ -158,6 +159,11 @@ class MainWindow(QMainWindow):
             img2surface, _ = self.localization
             self.surface.move_corner(corner, (x, y), img2surface, self.calibration)
 
+    def closeEvent(self, event):
+        if self.neon_device:
+            self.neon_device.close()
+
+        super().closeEvent(event)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

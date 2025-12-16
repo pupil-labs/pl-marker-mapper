@@ -74,7 +74,7 @@ def get_surface_boundary(surface2image, distorted=False, camera=None, n=10):
     )
     if distorted:
         assert camera is not None
-        surface_boundary_dist = camera.distort_points_on_image_plane(
+        surface_boundary_dist = camera.distort_points(
             surface_boundary_undist
         )
         return surface_boundary_dist

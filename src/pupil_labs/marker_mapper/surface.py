@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import pupil_apriltags
 
-from pupil_labs.camera import CameraRadial
+from pupil_labs.camera import Camera
 from pupil_labs.marker_mapper import fix
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class Surface:
     def from_apriltag_detections(
         name: str,
         detections: list[pupil_apriltags.Detection],
-        camera: CameraRadial,
+        camera: Camera,
     ) -> "Surface":
         """Create a `Surface` from a list of `pupil_apriltags.Detection`.
         The surface corners will be set to the "convex quadrilateral" formed by the detected markers.
@@ -75,7 +75,7 @@ class Surface:
     def localize(
         self,
         visible_markers: list[pupil_apriltags.Detection],
-        camera: CameraRadial,
+        camera: Camera,
     ):
         # TODO: How to handle duplicate markers?
 
@@ -100,7 +100,7 @@ class Surface:
     def add_marker(
         self,
         marker: pupil_apriltags.Detection,
-        camera: CameraRadial,
+        camera: Camera,
         img2surface: np.ndarray,
     ):
         if marker.tag_id in self.markers:
@@ -130,7 +130,7 @@ class Surface:
         corner_idx: int,
         new_pos: tuple[float, float],
         img2surface: np.ndarray,
-        camera: CameraRadial,
+        camera: Camera,
     ):
         new_pos_undist = fix.undistort_points(np.array(new_pos), camera)
         new_pos_surf = fix.perspectiveTransform(new_pos_undist, img2surface)
@@ -146,11 +146,11 @@ class Surface:
 
     @staticmethod
     def _get_undist_vertices(
-        markers: list[pupil_apriltags.Detection], camera: CameraRadial
+        markers: list[pupil_apriltags.Detection], camera: Camera
     ):
         vertices_dist = np.array([marker.corners for marker in markers])
         vertices_dist = vertices_dist.reshape(-1, 2)
-        vertices_undist = camera.undistort_points(vertices_dist, pixel_values=True)[
+        vertices_undist = camera.undistort_points(vertices_dist)[
             :, :2
         ]
         return vertices_undist
