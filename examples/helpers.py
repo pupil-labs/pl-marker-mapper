@@ -9,7 +9,7 @@ import helpers
 import pupil_apriltags
 
 import pupil_labs.neon_recording as nr
-from pupil_labs.camera import CameraRadial
+from pupil_labs.camera import Camera
 from pupil_labs.marker_mapper import Surface, fix, utils
 
 
@@ -27,11 +27,11 @@ def setup(recording_dir, include_gaze=False):
         debug=0,
     )
 
-    frames = recording.scene.sample(recording.scene.ts)
+    frames = recording.scene.sample(recording.scene.time)
     res = camera, marker_detector, frames
 
     if include_gaze:
-        gaze = recording.gaze.sample(recording.scene.ts)
+        gaze = recording.gaze.sample(recording.scene.time)
         res += (gaze,)
     return res
 
@@ -45,7 +45,7 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
     gaze_dist = None
     gaze_undist = None
     if gaze is not None:
-        gaze_dist = np.array([gaze.x, gaze.y])
+        gaze_dist = np.array([gaze.point[0], gaze.point[1]])
         gaze_undist = fix.undistort_points(gaze_dist, camera)
 
         cv2.circle(img_dist, tuple(gaze_dist.astype(int)), 50, (0, 0, 255), 3)
@@ -86,11 +86,11 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
     cv2.imshow("Distorted Image", img_dist)
 
 
-def get_cam(rec: nr.neon_recording.NeonRecording) -> CameraRadial:
+def get_cam(rec: nr.neon_recording.NeonRecording) -> Camera:
     camera_matrix = rec.calibration.scene_camera_matrix
     dist_coeffs = rec.calibration.scene_distortion_coefficients
 
-    return CameraRadial(1600, 1200, camera_matrix, dist_coeffs)
+    return Camera(1600, 1200, camera_matrix, dist_coeffs)
 
 
 def draw_markers(img, marker_ids, marker_verts, surface):

@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from screen_image_widget import SceneImageWidget
 from surface_image_widget import SurfaceImageWidget
 
-from pupil_labs.camera import CameraRadial
+from pupil_labs.camera import Camera
 from pupil_labs.marker_mapper import Surface, fix, utils
 from pupil_labs.realtime_api.simple import Device
 
@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         if not self.neon_device:
             raise RuntimeError("No Neon device found. Please connect a device.")
         calibration = self.neon_device.get_calibration()
-        self.calibration = CameraRadial(
+        self.camera = Camera(
             1600,
             1200,
             calibration.scene_camera_matrix,
@@ -68,8 +68,6 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.poll)
         self.timer.start(30)
 
-        self.poll()
-
     @staticmethod
     def connect_to_neon(neon_ip, neon_port) -> Device:
         print("Connecting to Neon device...", end="")
@@ -80,13 +78,19 @@ class MainWindow(QMainWindow):
         return device
 
     def poll(self):
-        scene_img, gaze_scene = (
-            self.neon_device.receive_matched_scene_video_frame_and_gaze()
+        matched_data = self.neon_device.receive_matched_scene_video_frame_and_gaze(
+            timeout_seconds=0.1
         )
+
+        if matched_data is None:
+            return
+
+        scene_img, gaze_scene = matched_data
+        gaze_scene = gaze_scene[0:2]
         scene_img = scene_img.bgr_pixels
 
         scene_gray = cv2.cvtColor(scene_img, cv2.COLOR_BGR2GRAY)
-        scene_undist = fix.undistort_image(scene_img, self.calibration)
+        scene_undist = fix.undistort_image(scene_img, self.camera)
         self.detected_markers = self.marker_detector.detect(scene_gray)
 
         surface_boundary = None
@@ -105,22 +109,22 @@ class MainWindow(QMainWindow):
             ]
 
             self.localization = self.surface.localize(
-                self.detected_markers, self.calibration
+                self.detected_markers, self.camera
             )
             if self.localization is not None:
                 img2surface, surface2image = self.localization
                 surface_boundary = utils.get_surface_boundary(
-                    surface2image, distorted=True, camera=self.calibration
+                    surface2image, distorted=True, camera=self.camera
                 )
 
                 surface_corners = utils.get_surface_boundary(
-                    surface2image, distorted=True, camera=self.calibration, n=2
+                    surface2image, distorted=True, camera=self.camera, n=2
                 )
                 surface_img = utils.crop_image(
                     scene_undist, surface2image, width=500, height=None
                 )
 
-                gaze_undist = fix.undistort_points(gaze_scene, self.calibration)
+                gaze_undist = fix.undistort_points(gaze_scene, self.camera)
                 gaze_surface_norm = fix.perspectiveTransform(gaze_undist, img2surface)[
                     0
                 ]
@@ -138,7 +142,7 @@ class MainWindow(QMainWindow):
 
     def define_surface(self):
         self.surface = Surface.from_apriltag_detections(
-            "test surface", self.detected_markers, self.calibration
+            "test surface", self.detected_markers, self.camera
         )
         self.define_surface_button.setEnabled(False)
 
@@ -151,13 +155,19 @@ class MainWindow(QMainWindow):
                     (m for m in self.detected_markers if m.tag_id == marker_id), None
                 )
                 img2surface, surface2image = self.localization
-                self.surface.add_marker(marker, self.calibration, img2surface)
+                self.surface.add_marker(marker, self.camera, img2surface)
 
     def on_corner_dragged(self, corner, x, y):
         if self.surface is not None:
             img2surface, _ = self.localization
-            self.surface.move_corner(corner, (x, y), img2surface, self.calibration)
+            self.surface.move_corner(corner, (x, y), img2surface, self.camera)
 
+    def closeEvent(self, event):
+        self.timer.stop()
+        if self.neon_device:
+            self.neon_device.close()
+
+        super().closeEvent(event)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

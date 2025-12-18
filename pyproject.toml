@@ -71,7 +71,7 @@ dev-dependencies = [
 ]
 
 [tool.uv.sources]
-pupil-labs-camera = { path = "../pl-camera" }
+pupil-labs-camera = { git = "https://github.com/pupil-labs/pl-camera" }
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
