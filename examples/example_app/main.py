@@ -14,7 +14,8 @@ from screen_image_widget import SceneImageWidget
 from surface_image_widget import SurfaceImageWidget
 
 from pupil_labs.camera import Camera
-from pupil_labs.marker_mapper import Surface, fix, utils
+from pupil_labs.camera import utils as camera_utils
+from pupil_labs.marker_mapper import Surface, utils
 from pupil_labs.realtime_api.simple import Device
 
 
@@ -90,7 +91,7 @@ class MainWindow(QMainWindow):
         scene_img = scene_img.bgr_pixels
 
         scene_gray = cv2.cvtColor(scene_img, cv2.COLOR_BGR2GRAY)
-        scene_undist = fix.undistort_image(scene_img, self.camera)
+        scene_undist = self.camera.undistort_image(scene_img)
         self.detected_markers = self.marker_detector.detect(scene_gray)
 
         surface_boundary = None
@@ -124,10 +125,10 @@ class MainWindow(QMainWindow):
                     scene_undist, surface2image, width=500, height=None
                 )
 
-                gaze_undist = fix.undistort_points(gaze_scene, self.camera)
-                gaze_surface_norm = fix.perspectiveTransform(gaze_undist, img2surface)[
-                    0
-                ]
+                gaze_undist = self.camera.undistort_points(gaze_scene)
+                gaze_surface_norm = camera_utils.perspective_transform(
+                    gaze_undist, img2surface
+                )[0]
                 gaze_surface = gaze_surface_norm * surface_img.shape[:2][::-1]
 
         self.scene_image_widget.update_data(
@@ -168,6 +169,7 @@ class MainWindow(QMainWindow):
             self.neon_device.close()
 
         super().closeEvent(event)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
