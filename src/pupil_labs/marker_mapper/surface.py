@@ -6,8 +6,7 @@ import cv2
 import numpy as np
 import pupil_apriltags
 
-from pupil_labs.camera import Camera
-from pupil_labs.camera import utils as camera_utils
+from pupil_labs.camera import Camera, get_perspective_transform, perspective_transform
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +60,11 @@ class Surface:
         vertices_undist = Surface._get_undist_vertices(detections, camera)
         quadrilateral = _get_convex_quadrilateral(vertices_undist)
 
-        img2surface = camera_utils.get_perspective_transform(
+        img2surface = get_perspective_transform(
             quadrilateral,
             normalized_corners(),
         )
-        vertices_surf = camera_utils.perspective_transform(vertices_undist, img2surface)
+        vertices_surf = perspective_transform(vertices_undist, img2surface)
         vertices_surf = vertices_surf.reshape(-1, 4, 2)
         marker_ids = [marker.tag_id for marker in detections]
         markers = OrderedDict(zip(marker_ids, vertices_surf, strict=False))
@@ -109,7 +108,7 @@ class Surface:
             )
 
         vertices_undist = self._get_undist_vertices([marker], camera)
-        vertices_surf = camera_utils.perspective_transform(vertices_undist, img2surface)
+        vertices_surf = perspective_transform(vertices_undist, img2surface)
         self.markers[marker.tag_id] = vertices_surf
 
     def remove_marker(self, marker_id: int):
@@ -121,11 +120,11 @@ class Surface:
         corners_original = normalized_corners()
         corners_rotated = np.roll(corners_original, -1, axis=0)
 
-        trans = camera_utils.get_perspective_transform(
+        trans = get_perspective_transform(
             corners_rotated, corners_original
         )
         for marker_id, vertices in self.markers.items():
-            self.markers[marker_id] = camera_utils.perspective_transform(
+            self.markers[marker_id] = perspective_transform(
                 vertices, trans
             )
 
@@ -137,16 +136,16 @@ class Surface:
         camera: Camera,
     ):
         new_pos_undist = camera.undistort_points(np.array(new_pos))
-        new_pos_surf = camera_utils.perspective_transform(new_pos_undist, img2surface)
+        new_pos_surf = perspective_transform(new_pos_undist, img2surface)
         new_pos_surf = new_pos_surf.flatten()
 
         corners_original = normalized_corners()
         corners_new = corners_original.copy()
         corners_new[corner_idx] = new_pos_surf
 
-        trans = camera_utils.get_perspective_transform(corners_new, corners_original)
+        trans = get_perspective_transform(corners_new, corners_original)
         for marker_id, vertices in self.markers.items():
-            self.markers[marker_id] = camera_utils.perspective_transform(
+            self.markers[marker_id] = perspective_transform(
                 vertices, trans
             )
 

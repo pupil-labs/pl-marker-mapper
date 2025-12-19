@@ -13,8 +13,7 @@ from PySide6.QtWidgets import (
 from screen_image_widget import SceneImageWidget
 from surface_image_widget import SurfaceImageWidget
 
-from pupil_labs.camera import Camera
-from pupil_labs.camera import utils as camera_utils
+from pupil_labs.camera import Camera, perspective_transform
 from pupil_labs.marker_mapper import Surface, utils
 from pupil_labs.realtime_api.simple import Device
 
@@ -126,7 +125,7 @@ class MainWindow(QMainWindow):
                 )
 
                 gaze_undist = self.camera.undistort_points(gaze_scene)
-                gaze_surface_norm = camera_utils.perspective_transform(
+                gaze_surface_norm = perspective_transform(
                     gaze_undist, img2surface
                 )[0]
                 gaze_surface = gaze_surface_norm * surface_img.shape[:2][::-1]

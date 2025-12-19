@@ -9,7 +9,7 @@ import sys
 
 import helpers
 
-from pupil_labs.camera import utils as camera_utils
+from pupil_labs.camera import perspective_transform
 from pupil_labs.marker_mapper import Surface
 
 
@@ -32,7 +32,7 @@ def main(recording_dir):
 
 def move_corner(camera, markers, surface):
     img2surface, surface2image = surface.localize(markers, camera)
-    current_corner_pos_undist = camera_utils.perspective_transform(
+    current_corner_pos_undist = perspective_transform(
         np.array([1, 0]), surface2image
     )
     current_corner_pos_dist = camera.distort_points(current_corner_pos_undist)

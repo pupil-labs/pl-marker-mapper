@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 
-from pupil_labs.camera import utils as camera_utils
+from pupil_labs.camera import perspective_transform
 from pupil_labs.marker_mapper import surface
 
 
 def crop_image(undist_image, surface2image, width=None, height=None):
     surface_corners_norm = surface.normalized_corners()
-    surface_corners_undist = camera_utils.perspective_transform(
+    surface_corners_undist = perspective_transform(
         surface_corners_norm, surface2image
     )
     crop_size = _calculate_crop_size(
@@ -70,7 +70,7 @@ def _calculate_crop_size(
 
 def get_surface_boundary(surface2image, distorted=False, camera=None, n=10):
     surface_boundary_norm = surface.normalized_boundary_points(n)
-    surface_boundary_undist = camera_utils.perspective_transform(
+    surface_boundary_undist = perspective_transform(
         surface_boundary_norm, surface2image
     )
     if distorted:
