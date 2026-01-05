@@ -7,10 +7,10 @@ cv2.destroyAllWindows()
 
 import helpers
 import pupil_apriltags
-
 import pupil_labs.neon_recording as nr
-from pupil_labs.camera import Camera
-from pupil_labs.marker_mapper import Surface, fix, utils
+from pupil_labs.camera import Camera, perspective_transform
+
+from pupil_labs.marker_mapper import Surface, utils
 
 
 def setup(recording_dir, include_gaze=False):
@@ -39,14 +39,14 @@ def setup(recording_dir, include_gaze=False):
 def visualize_results(camera, frame, markers, surface, localization, gaze=None):
     img_original = frame.bgr
     img_dist = img_original.copy()
-    img_undist_original = fix.undistort_image(frame.bgr, camera)
+    img_undist_original = camera.undistort_image(frame.bgr)
     img_undist = img_undist_original.copy()
 
     gaze_dist = None
     gaze_undist = None
     if gaze is not None:
         gaze_dist = np.array([gaze.point[0], gaze.point[1]])
-        gaze_undist = fix.undistort_points(gaze_dist, camera)
+        gaze_undist = camera.undistort_points(gaze_dist)
 
         cv2.circle(img_dist, tuple(gaze_dist.astype(int)), 50, (0, 0, 255), 3)
         cv2.circle(img_undist, tuple(gaze_undist.astype(int)), 50, (0, 0, 255), 3)
@@ -77,7 +77,7 @@ def visualize_results(camera, frame, markers, surface, localization, gaze=None):
             img_undist_original, surface2image, width=500, height=None
         )
         if gaze_undist is not None:
-            gaze_surf = fix.perspectiveTransform(gaze_undist, img2surface)[0]
+            gaze_surf = perspective_transform(gaze_undist, img2surface)[0]
             gaze_cropped = gaze_surf * img_cropped.shape[:2][::-1]
             cv2.circle(img_cropped, tuple(gaze_cropped.astype(int)), 20, (0, 0, 255), 3)
 
