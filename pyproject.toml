@@ -2,7 +2,7 @@
 name = "pupil-labs-marker-mapper"
 description = "Marker Mapper"
 authors = [{ name = "Pupil Labs GmbH", email = "info@pupil-labs.com" }]
-license = { text = "Proprietary" }
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10, <4.0"
 keywords = []
@@ -40,8 +40,12 @@ Repository = "https://github.com/pupil-labs/pl-marker-mapper"
 Issues = "https://github.com/pupil-labs/pl-marker-mapper/issues"
 
 
-[tool.uv]
-dev-dependencies = [
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
     "pytest>=8.2",
     "pre-commit>=2.20.0",
     "mypy>=0.991",
@@ -50,9 +54,7 @@ dev-dependencies = [
     "pytest-cov>=4.0.0",
 
     # stubs
-    # "opencv-stubs",
-    # "types-protobuf",
-    # "pandas-stubs",
+    "opencv-stubs",
 
     # docs
     "markdown-callouts>=0.4",
@@ -69,13 +71,6 @@ dev-dependencies = [
     # YORE: EOL 3.10: Remove line.
     "tomli>=2.0; python_version < '3.11'",
 ]
-
-[tool.uv.sources]
-pupil-labs-camera = { git = "https://github.com/pupil-labs/pl-camera" }
-
-[build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
-build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
