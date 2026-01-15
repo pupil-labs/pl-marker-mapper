@@ -13,6 +13,8 @@ This is an implementation of the Marker Mapper functionality as it can be found 
 
 The examples demonstrate how to interact with the Marker Mapper's interface. There is also an example app that demonstrates the Marker Mapper functionality in real-time in combination with a Neon device.
 
+Documentation of this library is currently still lacking, but you can find reference the [Surface Tracking plugin in Neon Player](https://github.com/pupil-labs/neon-player-beta/blob/main/src/pupil_labs/neon_player/plugins/surface_tracking/surface_tracking.py#L44) as a reference.
+
 ## Installation
 
 ```bash
