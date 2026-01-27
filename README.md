@@ -8,6 +8,7 @@
 [![pypi version](https://img.shields.io/pypi/v/pupil-labs-marker-mapper.svg)](https://pypi.org/project/pupil-labs-marker-mapper/)
 [![python version](https://img.shields.io/pypi/pyversions/pupil-labs-marker-mapper)](https://pypi.org/project/pupil-labs-marker-mapper/)
 
+[![pl-marker-mapper banner](https://raw.githubusercontent.com/pupil-labs/pl-marker-mapper/refs/heads/main/docs/assets/banner.png)](https://pupil-labs.com/)
 
 This is an implementation of the Marker Mapper functionality as it can be found in e.g. [Pupil Cloud](https://cloud.pupil-labs.com/) and [Neon Player](https://docs.pupil-labs.com/neon/neon-player/). This implementation allows both post hoc and real-time gaze mapping onto surfaces defined by AprilTags.
 
